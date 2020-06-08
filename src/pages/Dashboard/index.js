@@ -7,8 +7,7 @@ import {
   setMinutes,
   setSeconds,
   isBefore,
-  isEqual,
-  // parseISO,
+  parseISO,
 } from 'date-fns';
 import { utcToZonedTime } from 'date-fns-tz';
 import pt from 'date-fns/locale/pt';
@@ -33,17 +32,18 @@ function Dashboard() {
       const response = await api.get('schedule', {
         params: { date },
       });
-      console.tron.log(response.data);
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
       const data = range.map((hour) => {
         const checkDate = setSeconds(setMinutes(setHours(date, hour), 0), 0);
         const compareDate = utcToZonedTime(checkDate, timezone);
-
         return {
           time: `${hour}:00h`,
           past: isBefore(compareDate, new Date()),
-          appointmant: response.data.find((a) =>
-            isEqual(new Date(a.date), compareDate)
+          appointment: response.data.find(
+            (a) =>
+              format(parseISO(a.date), "yyyy-MM-d'T'HH:mm:ss") ===
+              format(compareDate, "yyyy-MM-d'T'HH:mm:ss")
           ),
         };
       });
@@ -59,7 +59,7 @@ function Dashboard() {
   function handleNextDay() {
     setDate(addDays(date, 1));
   }
-
+  console.tron.log(schedule);
   return (
     <Container>
       <header>
@@ -74,10 +74,10 @@ function Dashboard() {
 
       <ul>
         {schedule.map((time) => (
-          <Time key={time.time} past={time.past} available={!time.appointmant}>
+          <Time key={time.time} past={time.past} available={!time.appointment}>
             <strong>{time.time}</strong>
             <span>
-              {time.appointmant ? time.appointmant.user.name : 'Em Aberto'}
+              {time.appointment ? time.appointment.user.name : 'Em Aberto'}
             </span>
           </Time>
         ))}
